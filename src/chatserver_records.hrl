@@ -1,0 +1,2 @@
+-record(state, { listeners=[], messages=[] }).
+-record(user, { username, pid }).
