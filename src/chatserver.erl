@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %%% API
--export([start_link/0, join/2, nicklist/1, part/1]).
+-export([start_link/0, join/2, nicklist/1, part/1, send/2]).
 
 %%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
@@ -37,6 +37,9 @@ nicklist(Pid) ->
 part(Pid) ->
     gen_server:call(Pid, part).
 
+send(Pid, MessageText) ->
+    gen_server:cast(Pid, {send, self(), MessageText}).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% gen_server callbacks %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,12 +52,16 @@ handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
 handle_call(part, From, #state{}=State) ->
     NewState = remove_user(From, State),
-    {reply, ok, NewState};
-handle_call({send, Message}, _From, #state{}=State) ->
-    {reply, { ok, Message }, State}.
+    {reply, ok, NewState}.
+%handle_call({send, MessageText}, From, #state{}=State) ->
+    %broadcast(MessageText, From, State),
+    %{reply, { ok, MessageText }, State}.
 
-handle_cast(_Ref, _Request) ->
-    io:format("No idea", []).
+handle_cast({send, FromPid, MessageText}, #state{}=State) ->
+    broadcast(MessageText, FromPid, State),
+    {noreply, State};
+handle_cast(_, #state{}=State) ->
+    io:format("No idea", State).
 
 handle_info(Msg, State) ->
     io:format("Unexpected message: ~p~n",[Msg]),
@@ -86,3 +93,17 @@ remove_user({FromPid, _Ref}, State) ->
     OldListeners = State#state.listeners,
     NewListeners = lists:filter(fun(User) -> User#user.pid =/= FromPid end, OldListeners),
     State#state{listeners=NewListeners}.
+
+broadcast(MessageText, FromPid, State) ->
+    Message = build_message(MessageText, FromPid, State),
+    lists:foreach(fun(L) -> broadcast(Message, L#user.pid) end, State#state.listeners).
+broadcast(Message, ToPid) ->
+    ToPid ! Message.
+
+build_message(MessageText, FromPid, State) ->
+    User = user_from_pid(FromPid, State),
+    Username = User#user.username,
+    #message{username=Username, text=MessageText}.
+
+user_from_pid(FromPid, State) ->
+    hd(lists:filter(fun(User) -> User#user.pid == FromPid end, State#state.listeners)).
