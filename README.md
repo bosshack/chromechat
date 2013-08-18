@@ -6,6 +6,7 @@ A chat server written in erlang.  It consists of the following components:
     - Responds to the following messages:
         - { join, { Pid, username } }
         - { send, { Pid, message } }
+        - { nicklist, Pid }
         - { part, Pid }
     - Supports the following records:
         - { state { listeners=[], messages=[] } }
