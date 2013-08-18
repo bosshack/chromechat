@@ -16,11 +16,11 @@ join(Pid, Username) ->
 init([]) -> {ok, []}. %% no treatment of info here!
 
 handle_call({join, Username}, From, #state{}=State) ->
-    {reply, ok};
+    {reply, ok, State};
 handle_call(nicklist, From, #state{}=State) ->
-    {reply, list_usernames(State)};
-handle_call({send, Message}, From, #state{}=S) ->
-    {reply, { ok, Message }}.
+    {reply, list_usernames(State), State};
+handle_call({send, Message}, From, #state{}=State) ->
+    {reply, { ok, Message }, State}.
 
 handle_info(Msg, State) ->
     io:format("Unexpected message: ~p~n",[Msg]),
