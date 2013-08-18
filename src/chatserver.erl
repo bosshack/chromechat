@@ -65,8 +65,8 @@ terminate(normal, _State) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
-    %% No change planned. The function is there for the behaviour,
-    %% but will not be used. Only a version on the next
+    %% Code changing is not presently supported.  This
+    %% function exists to satisfy the behaviour.
     {ok, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
