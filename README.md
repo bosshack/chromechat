@@ -12,3 +12,14 @@ A chat server written in erlang.  It consists of the following components:
         - { state { listeners=[], messages=[] } }
         - { message, { username, message } }
         - { user, { username, pid } }
+
+## Basic in-console tests
+Just a few notes on how you can use this as I get it built, since I'm new to erlang and forget this stuff:
+
+```
+c(chatserver).
+rr(chatserver).
+{ok, Pid} = chatserver:start_link().
+chatserver:join(Pid, "knewter").
+chatserver:nicklist(Pid).
+```

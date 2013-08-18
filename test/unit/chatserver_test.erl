@@ -11,7 +11,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 join_test_() ->
-    {"A client can connect to the server.",
+    {"A client can connect to the server, which adds its User to the listeners list.",
      ?setup(fun can_connect/1)}.
 
 nicklist_test_() ->
@@ -21,6 +21,10 @@ nicklist_test_() ->
 send_test_() ->
     {"A client can send messages.",
      ?setup(fun can_send_message/1)}.
+
+join_and_appear_in_nicklist_test_() ->
+    {"A client sees itself in the nicklist after joining.",
+     ?setup(fun can_connect_and_then_see_self_in_nicklist/1)}.
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %%% Setup Functions %%%
@@ -43,14 +47,21 @@ stop(_) ->
 %%%%%%%%%%%%%%%%%%%%
 can_connect(Self) ->
     InitialState = #state{listeners=[], messages=[]},
-    [?_assertMatch({reply, ok}, chatserver:handle_call({join, "knewter"}, Self, InitialState))].
+    Knewter = #user{username="knewter", pid=Self},
+    StateWithUser = #state{listeners=[Knewter], messages=[]},
+    [?_assertMatch({reply, ok, StateWithUser}, chatserver:handle_call({join, "knewter"}, Self, InitialState))].
 
 can_list_users(Self) ->
     Knewter = #user{username="knewter", pid=Self},
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ["knewter"]}, chatserver:handle_call(nicklist, Self, StateWithUser))].
+    [?_assertMatch({reply, ["knewter"], StateWithUser}, chatserver:handle_call(nicklist, Self, StateWithUser))].
 
 can_send_message(Self) ->
     Knewter = #user{username="knewter", pid=Self},
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, { ok, "some message" }}, chatserver:handle_call({send, "some message" }, Self, StateWithUser))].
+    [?_assertMatch({reply, { ok, "some message" }, StateWithUser}, chatserver:handle_call({send, "some message" }, Self, StateWithUser))].
+
+can_connect_and_then_see_self_in_nicklist(Self) ->
+    {ok, Pid} = chatserver:start_link(),
+    chatserver:join(Pid, "knewter"),
+    [?_assertEqual(["knewter"], chatserver:nicklist(Pid))].

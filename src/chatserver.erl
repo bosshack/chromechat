@@ -1,25 +1,31 @@
 -module(chatserver).
 -behaviour(gen_server).
--export([start_link/0, join/2]).
+-export([start_link/0, join/2, nicklist/1]).
 -export([init/1, handle_call/3, handle_info/2,
                  terminate/2, code_change/3]).
 -include("chatserver_records.hrl").
 
 %%% Client API
 start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+    gen_server:start_link(?MODULE, #state{}, []).
 
 join(Pid, Username) ->
     gen_server:call(Pid, {join, Username}).
 
+nicklist(Pid) ->
+    gen_server:call(Pid, nicklist).
+
 %%% Server functions
-init([]) -> {ok, []}. %% no treatment of info here!
+init(State) -> {ok, State}. %% no treatment of info here!
 
 handle_call({join, Username}, From, #state{}=State) ->
-    {reply, ok, State};
-handle_call(nicklist, From, #state{}=State) ->
+    io:format("~p~n", [State#state.listeners]),
+    NewUser = #user{username=Username, pid=From},
+    NewState = State#state{listeners=[NewUser|State#state.listeners]},
+    {reply, ok, NewState};
+handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
-handle_call({send, Message}, From, #state{}=State) ->
+handle_call({send, Message}, _From, #state{}=State) ->
     {reply, { ok, Message }, State}.
 
 handle_info(Msg, State) ->
