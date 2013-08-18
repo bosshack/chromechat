@@ -1,14 +1,30 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% @author Josh Adams <josh@isotope11.com> %%%
+%%% @copyright (c) 2013, Josh Adams         %%%
+%%% @doc                                    %%%
+%%% @end                                    %%%
+%%%                                         %%%
+%%% Created 2013-08-17 by Josh Adams        %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -module(chatserver).
 -behaviour(gen_server).
+
+%%% API
 -export([start_link/0, join/2, nicklist/1, part/1]).
+
+%%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
                  terminate/2, code_change/3]).
--include("chatserver_records.hrl").
+
+-include_lib("chatserver_records.hrl").
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
-%%% Client API
+%%%%%%%%%%%%%%%%%%
+%%% Client API %%%
+%%%%%%%%%%%%%%%%%%
 start_link() ->
     gen_server:start_link(?MODULE, #state{}, []).
 
@@ -21,7 +37,9 @@ nicklist(Pid) ->
 part(Pid) ->
     gen_server:call(Pid, part).
 
-%%% Server functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% gen_server callbacks %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 init(State) -> {ok, State}. %% no treatment of info here!
 
 handle_call({join, Username}, From, #state{}=State) ->
@@ -51,7 +69,9 @@ code_change(_OldVsn, State, _Extra) ->
     %% but will not be used. Only a version on the next
     {ok, State}.
 
-%%% Implementation functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Internal functions %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 list_usernames(State) ->
     MapToUsername = fun(X) ->
         X#user.username
