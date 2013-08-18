@@ -29,3 +29,11 @@ chatserver:nicklist(Pid).
 chatserver:join(Pid, "knewter").
 chatserver:send(Pid, "Message test").
 ```
+
+## Development
+
+To run the tests:
+
+```
+rebar eunit
+```
