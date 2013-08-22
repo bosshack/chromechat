@@ -52,6 +52,10 @@ handle_call({join, Username}, From, #state{}=State) ->
 handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
 handle_call(part, From, #state{}=State) ->
+    {FromPid, _} = From,
+    User = user_from_pid(FromPid, State),
+    Username = User#user.username,
+    broadcast_part_message(Username, State),
     NewState = remove_user(From, State),
     {reply, ok, NewState}.
 %handle_call({send, MessageText}, From, #state{}=State) ->
@@ -115,5 +119,9 @@ user_from_pid(FromPid, State) ->
 
 broadcast_join_message(Username, State) ->
     Message = build_message(Username ++ " has joined."),
+    broadcast(Message, State).
+
+broadcast_part_message(Username, State) ->
+    Message = build_message(Username ++ " has parted."),
     broadcast(Message, State).
 

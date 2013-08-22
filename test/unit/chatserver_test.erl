@@ -18,6 +18,11 @@ join_and_join_message_is_broadcast_test_() ->
     {"A client joins and is announced to all attached listeners.",
      ?setup(fun is_broadcast_on_join/1)}.
 
+part_and_part_message_is_broadcast_test_() ->
+    {"A client parts and it is announced to all attached listeners.",
+     ?setup(fun is_broadcast_on_part/1)}.
+
+
 join_and_appear_in_nicklist_test_() ->
     {"A client sees itself in the nicklist after joining.",
      ?setup(fun can_connect_and_then_see_self_in_nicklist/1)}.
@@ -103,6 +108,13 @@ is_broadcast_on_join(_) ->
     {ok, Pid} = chatserver:start_link(),
     chatserver:join(Pid, "knewter"),
     assert_received(#message{username="system", text="knewter has joined."}).
+
+is_broadcast_on_part(_) ->
+    {ok, Pid} = chatserver:start_link(),
+    chatserver:join(Pid, "knewter"),
+    flush(),
+    chatserver:part(Pid),
+    assert_received(#message{username="system", text="knewter has parted."}).
 
 assert_received(Inbound) ->
     Message = receive_message(),
