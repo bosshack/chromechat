@@ -14,6 +14,10 @@
 %%% Test Descriptions %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
+join_and_join_message_is_broadcast_test_() ->
+    {"A client joins and is announced to all attached listeners.",
+     ?setup(fun is_broadcast_on_join/1)}.
+
 join_and_appear_in_nicklist_test_() ->
     {"A client sees itself in the nicklist after joining.",
      ?setup(fun can_connect_and_then_see_self_in_nicklist/1)}.
@@ -46,7 +50,11 @@ start() ->
     self().
 
 stop(_) ->
-    "no-op.".
+    %% Clear out the receive buffer before each test
+    %% DICKS THAT'S JUST A SHELL fuNCTION
+
+    flush(),
+    ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper Functions %%%
@@ -87,16 +95,31 @@ can_disconnect_and_username_is_removed_from_nicklist(_) ->
 can_connect_and_send_message(_) ->
     {ok, Pid} = chatserver:start_link(),
     chatserver:join(Pid, "knewter"),
+    flush(),
     chatserver:send(Pid, "this is a message"),
     assert_received(#message{username="knewter", text="this is a message"}).
 
+is_broadcast_on_join(_) ->
+    {ok, Pid} = chatserver:start_link(),
+    chatserver:join(Pid, "knewter"),
+    assert_received(#message{username="system", text="knewter has joined."}).
+
 assert_received(Inbound) ->
-    Message = receive
-                  Inbound -> Inbound;
-                  Other -> Other
-              after ?TIMEOUT ->
-                  throw("Message expected.")
-              end,
+    Message = receive_message(),
     [?_assertEqual(Inbound, Message)].
+
+receive_message() ->
+    receive
+        M -> M
+    after ?TIMEOUT ->
+        throw("Message expected.")
+    end.
+
+flush() ->
+    receive
+        _ -> flush()
+    after 0 ->
+        ok
+    end.
 
 -endif.

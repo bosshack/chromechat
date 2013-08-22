@@ -47,6 +47,7 @@ init(State) -> {ok, State}. %% no treatment of info here!
 
 handle_call({join, Username}, From, #state{}=State) ->
     NewState = add_user(Username, From, State),
+    broadcast_join_message(Username, NewState),
     {reply, ok, NewState};
 handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
@@ -96,7 +97,9 @@ remove_user({FromPid, _Ref}, State) ->
 
 broadcast(MessageText, FromPid, State) ->
     Message = build_message(MessageText, FromPid, State),
-    lists:foreach(fun(L) -> broadcast(Message, L#user.pid) end, State#state.listeners).
+    broadcast(Message, State).
+broadcast(Message, #state{}=State) ->
+    lists:foreach(fun(L) -> broadcast(Message, L#user.pid) end, State#state.listeners);
 broadcast(Message, ToPid) ->
     ToPid ! Message.
 
@@ -104,6 +107,13 @@ build_message(MessageText, FromPid, State) ->
     User = user_from_pid(FromPid, State),
     Username = User#user.username,
     #message{username=Username, text=MessageText}.
+build_message(MessageText) ->
+    #message{username="system", text=MessageText}.
 
 user_from_pid(FromPid, State) ->
     hd(lists:filter(fun(User) -> User#user.pid == FromPid end, State#state.listeners)).
+
+broadcast_join_message(Username, State) ->
+    Message = build_message(Username ++ " has joined."),
+    broadcast(Message, State).
+
