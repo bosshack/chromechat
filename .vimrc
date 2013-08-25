@@ -1,1 +1,1 @@
-map <leader>t :!rebar eunit<CR>
+map <leader>t :!make test<CR>
