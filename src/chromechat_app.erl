@@ -15,7 +15,7 @@ start(_StartType, _StartArgs) ->
                     {"/websocket", ws_handler, []}
                 ]}
         ]),
-    {ok, _} = cowboy:start_http(http, 100, [{port, 80}], % so this will start an http server on port 80, and the routes are up there ^ ^ ^
+    {ok, _} = cowboy:start_http(http, 100, [{port, 8000}], % so this will start an http server on port 8000, and the routes are up there ^ ^ ^
         [{env, [{dispatch, Dispatch}]}]),
     chromechat_sup:start_link().
 
