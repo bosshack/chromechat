@@ -13,3 +13,5 @@ test:
 
 clean:
 	@$(REBAR) clean
+
+.PHONY: test

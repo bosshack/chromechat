@@ -13,6 +13,14 @@ A chat server written in erlang.  It consists of the following components:
         - { message, { username, text } }
         - { user, { username, pid } }
 
+## Development
+
+To run the tests:
+
+```
+make test
+```
+
 ## Basic in-console tests
 Just a few notes on how you can use this as I get it built, since I'm new to erlang and forget this stuff:
 
@@ -140,11 +148,3 @@ flush(). % Should see a hey guys message from foo_user
 ```
 
 That's a successful chat server, if presently kind of unwieldy! :D
-
-## Development
-
-To run the tests:
-
-```
-rebar eunit
-```
