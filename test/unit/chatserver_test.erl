@@ -22,7 +22,6 @@ part_and_part_message_is_broadcast_test_() ->
     {"A client parts and it is announced to all attached listeners.",
      ?setup(fun is_broadcast_on_part/1)}.
 
-
 join_and_appear_in_nicklist_test_() ->
     {"A client sees itself in the nicklist after joining.",
      ?setup(fun can_connect_and_then_see_self_in_nicklist/1)}.

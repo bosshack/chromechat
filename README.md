@@ -21,6 +21,12 @@ To run the tests:
 make test
 ```
 
+To run the server:
+
+```
+./start.sh
+```
+
 ## Basic in-console tests
 Just a few notes on how you can use this as I get it built, since I'm new to erlang and forget this stuff:
 
@@ -148,3 +154,7 @@ flush(). % Should see a hey guys message from foo_user
 ```
 
 That's a successful chat server, if presently kind of unwieldy! :D
+
+## Deployment
+
+Currently following deployment from https://github.com/6/heroku-erlang-example/
