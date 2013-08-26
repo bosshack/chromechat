@@ -159,4 +159,3 @@ That's a successful chat server, if presently kind of unwieldy! :D
 ## Deployment
 
 Currently following deployment from https://github.com/6/heroku-erlang-example/
-
