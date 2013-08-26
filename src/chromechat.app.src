@@ -8,5 +8,5 @@
                   stdlib
                  ]},
   {mod, { chromechat_app, []}},
-  {env, []}
+  {env, [{ http_port, 8000 }]}
  ]}.
