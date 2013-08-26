@@ -28,6 +28,7 @@ To run the server:
 ```
 
 ## Basic in-console tests
+
 Just a few notes on how you can use this as I get it built, since I'm new to erlang and forget this stuff:
 
 ### Playing with the chatserver directly.
