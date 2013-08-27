@@ -23,6 +23,14 @@ make test
 
 To run the server:
 
+First, make the project:
+
+```
+make
+```
+
+Then, run it.
+
 ```
 ./start.sh
 ```
