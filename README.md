@@ -35,6 +35,8 @@ Then, run it.
 ./start.sh
 ```
 
+Now you can go to http://localhost:8080
+
 ## Basic in-console tests
 
 Just a few notes on how you can use this as I get it built, since I'm new to erlang and forget this stuff:
