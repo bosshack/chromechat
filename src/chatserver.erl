@@ -46,9 +46,12 @@ send(Pid, MessageText) ->
 init(State) -> {ok, State}. %% no treatment of info here!
 
 handle_call({join, Username}, From, #state{}=State) ->
-    NewState = add_user(Username, From, State),
-    broadcast_join_message(Username, NewState),
-    {reply, ok, NewState};
+    case lists:any(fun(X) -> X#user.username == Username end, State#state.listeners) of
+        true -> {reply, duplicate_username, State};
+        false -> NewState = add_user(Username, From, State),
+            broadcast_join_message(Username, NewState),
+            {reply, ok, NewState}
+    end;
 handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
 handle_call(part, From, #state{}=State) ->
