@@ -42,7 +42,7 @@ connect_and_appear_in_nicklist_test_() ->
     Username = "knewter",
     {ok, Pid} = chatserver:start_link(),
     chatserver:connect(Pid, Username),
-    [?_assertEqual(["knewter"], chatserver:nicklist(Pid)),
+    [?_assertEqual([Username], chatserver:nicklist(Pid)),
      ?_assertEqual(duplicate_username, chatserver:connect(Pid, Username))].
 
 connect_and_send_message_test_() ->
