@@ -39,10 +39,11 @@ join_with_duplicate_username_test_() ->
      ?_assertEqual([Username], chatserver:nicklist(Pid))].
 
 connect_and_appear_in_nicklist_test_() ->
+    Username = "knewter",
     {ok, Pid} = chatserver:start_link(),
-    chatserver:connect(Pid, "knewter"),
+    chatserver:connect(Pid, Username),
     [?_assertEqual(["knewter"], chatserver:nicklist(Pid)),
-     ?_assertEqual(duplicate_username, chatserver:connect(Pid, "knewter"))].
+     ?_assertEqual(duplicate_username, chatserver:connect(Pid, Username))].
 
 connect_and_send_message_test_() ->
     {"A client connects and sends a message, and has that message broadcast to it.",
