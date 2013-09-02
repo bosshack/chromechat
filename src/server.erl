@@ -2,7 +2,7 @@
 -behavior(gen_server).
 
 %%% API
--export([start_link/0, connect/2, disconnect/1, part/2, send/3]).
+-export([start_link/0, connect/2, join/2, disconnect/1, part/2, send/3, channel_list/1]).
 
 %%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
@@ -22,6 +22,12 @@ connect(ServerPid, Username) ->
 disconnect(ServerPid) ->
     gen_server:call(ServerPid, {disconnect}).
 
+channel_list(ServerPid) ->
+    gen_server:call(ServerPid, {channel_list}).
+
+join(ServerPid, ChannelName) ->
+    gen_server:call(ServerPid, {join, ChannelName}).
+
 part(ServerPid, ChannelName) ->
     gen_server:cast(ServerPid, {part, self(), ChannelName}).
 
@@ -39,7 +45,20 @@ handle_call({connect, Username}, From, #serverstate{}=ServerState) ->
     {reply, Status, NewState};
 handle_call({disconnect}, From, #serverstate{}=ServerState) ->
     NewState = remove_user(From, ServerState),
-    {reply, ok, NewState}.
+    {reply, ok, NewState};
+handle_call({channel_list}, From, #serverstate{}=ServerState) ->
+    GetChannelName = fun(X) -> X#channel.name end,
+    ChannelNames = lists:map(GetChannelName, ServerState#serverstate.channels),
+    {reply, ChannelNames, ServerState};
+handle_call({join, ChannelName}, From, #serverstate{}=ServerState) ->
+    case lists:any(fun(#channel{}=X) -> X#channel.name == ChannelName end, ServerState#serverstate.channels) of
+        true -> {reply, ok, ServerState};
+        false -> {ok, ChannelPid} = channel:start_link(),
+            NewServerState = #serverstate{listeners=ServerState#serverstate.listeners,
+                messages=ServerState#serverstate.messages, 
+                channels=[#channel{name=ChannelName,pid=ChannelPid}|ServerState#serverstate.channels]},
+            {reply, ok, NewServerState}
+    end.
 
 handle_cast({send, FromPid, MessageText}, #serverstate{}=ServerState) ->
     {noreply, ServerState}.
