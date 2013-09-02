@@ -31,19 +31,19 @@ part_and_disappear_from_nicklist_test_() ->
      ?setup(fun can_disconnect_and_username_is_removed_from_nicklist/1)}.
 
 join_with_duplicate_username_test_() ->
-    {ok, Pid} = chatserver:start_link(),
+    {ok, Pid} = channel:start_link(),
     Username = "knewter",
-    chatserver:join(Pid, Username),
-    SecondJoinResult = chatserver:join(Pid, Username),
+    channel:join(Pid, Username),
+    SecondJoinResult = channel:join(Pid, Username),
     [?_assertEqual(SecondJoinResult, duplicate_username),
-     ?_assertEqual([Username], chatserver:nicklist(Pid))].
+     ?_assertEqual([Username], channel:nicklist(Pid))].
 
 connect_and_appear_in_nicklist_test_() ->
     Username = "knewter",
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:connect(Pid, Username),
-    [?_assertEqual([Username], chatserver:nicklist(Pid)),
-     ?_assertEqual(duplicate_username, chatserver:connect(Pid, Username))].
+    {ok, Pid} = channel:start_link(),
+    channel:connect(Pid, Username),
+    [?_assertEqual([Username], channel:nicklist(Pid)),
+     ?_assertEqual(duplicate_username, channel:connect(Pid, Username))].
 
 connect_and_send_message_test_() ->
     {"A client connects and sends a message, and has that message broadcast to it.",
@@ -110,19 +110,6 @@ can_disconnect_and_username_is_removed_from_nicklist(_) ->
     channel:join(Pid, "knewter"),
     channel:part(Pid),
     [?_assertEqual([], channel:nicklist(Pid))].
-
-join_with_duplicate_username_returns_duplicate_username(_) ->
-    {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
-    SecondJoinResult = channel:join(Pid, "knewter"),
-    [?_assertEqual(SecondJoinResult, duplicate_username)].
-
-join_with_duplicate_username_does_not_appear_in_nicklist(_) ->
-    {ok, Pid} = channel:start_link(),
-    Username = "knewter",
-    channel:join(Pid, Username),
-    channel:join(Pid, Username),
-    [?_assertEqual([Username], channel:nicklist(Pid))].
 
 can_connect_and_send_message(_) ->
     {ok, Pid} = channel:start_link(),
