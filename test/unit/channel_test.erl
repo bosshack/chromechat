@@ -1,11 +1,11 @@
 %% This is my first attempt at unit testing a server in erlang.
 %% Was pointed to this as an example: https://github.com/blt/locker/blob/master/src/lk_proc.erl#L144
--module(chatserver_test).
+-module(channel_test).
 
 -ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
--include("../../src/chatserver_records.hrl").
+-include("../../src/channel_records.hrl").
 
 -define(setup(F), {setup, fun start/0, fun stop/1, F}).
 -define(TIMEOUT, 50).
@@ -81,59 +81,59 @@ can_connect(SelfPid) ->
     InitialState = #state{listeners=[], messages=[]},
     Knewter = #user{username="knewter", pid=SelfPid},
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ok, StateWithUser}, chatserver:handle_call({join, "knewter"}, {SelfPid, []}, InitialState))].
+    [?_assertMatch({reply, ok, StateWithUser}, channel:handle_call({join, "knewter"}, {SelfPid, []}, InitialState))].
 
 can_list_users(SelfPid) ->
     Knewter = #user{username="knewter", pid=SelfPid},
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ["knewter"], StateWithUser}, chatserver:handle_call(nicklist, {SelfPid, []}, StateWithUser))].
+    [?_assertMatch({reply, ["knewter"], StateWithUser}, channel:handle_call(nicklist, {SelfPid, []}, StateWithUser))].
 
 can_send_message(SelfPid) ->
     Knewter = #user{username="knewter", pid=SelfPid},
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({noreply, StateWithUser}, chatserver:handle_cast({send, SelfPid, "some message" }, StateWithUser))].
+    [?_assertMatch({noreply, StateWithUser}, channel:handle_cast({send, SelfPid, "some message" }, StateWithUser))].
 
 can_connect_and_then_see_self_in_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    [?_assertEqual(["knewter"], chatserver:nicklist(Pid))].
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
+    [?_assertEqual(["knewter"], channel:nicklist(Pid))].
 
 can_disconnect_and_username_is_removed_from_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    chatserver:part(Pid),
-    [?_assertEqual([], chatserver:nicklist(Pid))].
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
+    channel:part(Pid),
+    [?_assertEqual([], channel:nicklist(Pid))].
 
 join_with_duplicate_username_returns_duplicate_username(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    SecondJoinResult = chatserver:join(Pid, "knewter"),
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
+    SecondJoinResult = channel:join(Pid, "knewter"),
     [?_assertEqual(SecondJoinResult, duplicate_username)].
 
 join_with_duplicate_username_does_not_appear_in_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
+    {ok, Pid} = channel:start_link(),
     Username = "knewter",
-    chatserver:join(Pid, Username),
-    chatserver:join(Pid, Username),
-    [?_assertEqual([Username], chatserver:nicklist(Pid))].        
+    channel:join(Pid, Username),
+    channel:join(Pid, Username),
+    [?_assertEqual([Username], channel:nicklist(Pid))].
 
 can_connect_and_send_message(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
     flush(),
-    chatserver:send(Pid, "this is a message"),
+    channel:send(Pid, "this is a message"),
     assert_received(#message{username="knewter", text="this is a message"}).
 
 is_broadcast_on_join(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
     assert_received(#message{username="system", text="knewter has joined."}).
 
 is_broadcast_on_part(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, "knewter"),
     flush(),
-    chatserver:part(Pid),
+    channel:part(Pid),
     assert_received(#message{username="system", text="knewter has parted."}).
 
 assert_received(Inbound) ->

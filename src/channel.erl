@@ -6,7 +6,7 @@
 %%%                                         %%%
 %%% Created 2013-08-17 by Josh Adams        %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--module(chatserver).
+-module(channel).
 -behaviour(gen_server).
 
 %%% API
@@ -16,11 +16,7 @@
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
                  terminate/2, code_change/3]).
 
--include_lib("chatserver_records.hrl").
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
+-include("./channel_records.hrl").
 
 %%%%%%%%%%%%%%%%%%
 %%% Client API %%%
