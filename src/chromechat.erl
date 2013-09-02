@@ -12,8 +12,8 @@ start() ->
     ensure_started(ranch),
     ensure_started(sasl),
     ensure_started(cowboy),
-    {ok, ChatServerPid} = chatserver:start_link(),
-    register(chatserver_server, ChatServerPid),
+    {ok, ChannelPid} = channel:start_link(),
+    register(channel_server, ChannelPid),
     application:start(chromechat).
 
 stop() ->
