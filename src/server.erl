@@ -36,7 +36,10 @@ init(ServerState) -> {ok, ServerState}.
 
 handle_call({connect, Username}, From, #serverstate{}=ServerState) ->
     {Status, NewState} = add_user(Username, From, ServerState),
-    {reply, Status, NewState}.
+    {reply, Status, NewState};
+handle_call({disconnect}, From, #serverstate{}=ServerState) ->
+    NewState = remove_user(From, ServerState),
+    {reply, ok, NewState}.
 
 handle_cast({send, FromPid, MessageText}, #serverstate{}=ServerState) ->
     {noreply, ServerState}.
@@ -64,6 +67,11 @@ add_user(Username, {FromPid, _Ref}, ServerState) ->
         false -> NewUser = #user{username=Username, pid=FromPid},
                  {ok, ServerState#serverstate{listeners=[NewUser|ServerState#serverstate.listeners]}}
     end.
+
+remove_user({FromPid, _Ref}, ServerState) ->
+    OldListeners = ServerState#serverstate.listeners,
+    NewListeners = lists:filter(fun(User) -> User#user.pid =/= FromPid end, OldListeners),
+    ServerState#serverstate{channels=ServerState#serverstate.channels, listeners=NewListeners}.
 
 user_from_pid(FromPid, ServerState) ->
     hd(lists:filter(fun(User) -> User#user.pid == FromPid end, ServerState#serverstate.listeners)).

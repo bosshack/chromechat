@@ -17,6 +17,12 @@ connect_test_() ->
     {ok, ServerPid} = server:start_link(),
     ?_assertEqual(ok, server:connect(ServerPid, Username)).
 
+disconnect_test_() ->
+    Username = "tester",
+    {ok, ServerPid} = server:start_link(),
+    server:connect(ServerPid, Username),
+    ?_assertEqual(ok, server:disconnect(ServerPid)).
+
 %%%%%%%%%%%%%%%%%%%%%%%
 %%% Setup Functions %%%
 %%%%%%%%%%%%%%%%%%%%%%%
