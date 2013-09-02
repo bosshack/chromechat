@@ -1,4 +1,5 @@
 # ChromeChat
+[![Build Status](https://travis-ci.org/bosshack/chromechat.png?branch=master)](https://travis-ci.org/bosshack/chromechat)
 
 A chat server written in erlang.  It consists of the following components:
 
