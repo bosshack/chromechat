@@ -38,13 +38,6 @@ join_with_duplicate_username_test_() ->
     [?_assertEqual(SecondJoinResult, duplicate_username),
      ?_assertEqual([Username], channel:nicklist(Pid))].
 
-connect_and_appear_in_nicklist_test_() ->
-    Username = "knewter",
-    {ok, Pid} = channel:start_link(),
-    channel:connect(Pid, Username),
-    [?_assertEqual([Username], channel:nicklist(Pid)),
-     ?_assertEqual(duplicate_username, channel:connect(Pid, Username))].
-
 connect_and_send_message_test_() ->
     {"A client connects and sends a message, and has that message broadcast to it.",
      ?setup(fun can_connect_and_send_message/1)}.

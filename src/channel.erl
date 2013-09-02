@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %%% API
--export([start_link/0, connect/2, join/2, nicklist/1, part/1, send/2]).
+-export([start_link/0, join/2, nicklist/1, part/1, send/2]).
 
 %%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
@@ -23,9 +23,6 @@
 %%%%%%%%%%%%%%%%%%
 start_link() ->
     gen_server:start_link(?MODULE, #state{}, []).
-
-connect(Pid, Username) ->
-    gen_server:call(Pid, {connect, Username}).
 
 join(Pid, Username) ->
     gen_server:call(Pid, {join, Username}).
@@ -44,9 +41,6 @@ send(Pid, MessageText) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 init(State) -> {ok, State}. %% no treatment of info here!
 
-handle_call({connect, Username}, From, #state{}=State) ->
-    {Status, NewState} = add_user(Username, From, State),
-    {reply, Status, NewState};
 handle_call({join, Username}, From, #state{}=State) ->
     {Status, NewState} = add_user(Username, From, State),
     broadcast_join_message(Username, NewState),
