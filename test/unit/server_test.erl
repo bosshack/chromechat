@@ -31,13 +31,52 @@ channel_list_test_() ->
     ?_assertEqual({reply, [ChannelName], ServerState}, Result).
 
 join_test_() ->
+    {ok, ServerPid} = server:start_link(),
     Username = "tester",
     ChannelName = "bosshack",
-    {ok, ServerPid} = server:start_link(),
+    SelfPid = self(),
     server:connect(ServerPid, Username),
-    JoinResult = server:join(ServerPid, ChannelName),
-    [?_assertEqual(ok, JoinResult),
-     ?_assertEqual([ChannelName], server:channel_list(ServerPid))].
+    {setup,
+     fun() ->
+        meck:new(channel),
+        meck:expect(channel, start_link, 0, {ok, self()}),
+        meck:expect(channel, join, 2, ok),
+        server:join(ServerPid, ChannelName)
+     end,
+     fun(_) ->
+        meck:unload(channel)
+     end,
+     [?_assertEqual([ChannelName], server:channel_list(ServerPid)),
+      ?_assert(meck:called(channel, start_link, [])),
+      ?_assert(meck:called(channel, join, [SelfPid, Username]))
+     ]
+
+    }.
+
+send_test_() ->
+    Username = "tester",
+    ChannelName = "bosshack",
+    Channel = #channel{name=ChannelName,pid=self()},
+    User = #user{username=Username,pid=self()},
+    MessageText = "Hello World",
+    ServerStateWithUserAndChannel = #serverstate{channels=[Channel],listeners=[User]},
+    {setup,
+     fun() ->
+        meck:new(channel),
+        meck:expect(channel, join, 2, ok),
+        meck:expect(channel, send, 2, ok)
+     end,
+     fun(_) ->
+        meck:unload(channel)
+     end,
+     [
+      ?_assertMatch({noreply, ServerStateWithUserAndChannel},
+            server:handle_cast({send, self(), ChannelName, MessageText}, ServerStateWithUserAndChannel)),
+      ?_assert(meck:called(channel, send, [Channel#channel.pid, MessageText]))
+     ]
+
+    }.
+    
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %%% Setup Functions %%%
@@ -55,6 +94,17 @@ flush() ->
         _ -> flush()
     after 0 ->
         ok
+    end.
+
+assert_received(Inbound) ->
+    Message = receive_message(),
+    [?_assertEqual(Inbound, Message)].
+
+receive_message() ->
+    receive
+        M -> M
+    after ?TIMEOUT ->
+        throw("Message expected.")
     end.
 
 -endif.

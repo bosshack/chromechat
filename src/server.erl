@@ -32,7 +32,7 @@ part(ServerPid, ChannelName) ->
     gen_server:cast(ServerPid, {part, self(), ChannelName}).
 
 send(ServerPid, ChannelName, MessageText) ->
-    gen_server:cast(ServerPid, {send, self(), MessageText}).
+    gen_server:cast(ServerPid, {send, self(), ChannelName, MessageText}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,16 +51,22 @@ handle_call({channel_list}, From, #serverstate{}=ServerState) ->
     ChannelNames = lists:map(GetChannelName, ServerState#serverstate.channels),
     {reply, ChannelNames, ServerState};
 handle_call({join, ChannelName}, From, #serverstate{}=ServerState) ->
-    case lists:any(fun(#channel{}=X) -> X#channel.name == ChannelName end, ServerState#serverstate.channels) of
-        true -> {reply, ok, ServerState};
-        false -> {ok, ChannelPid} = channel:start_link(),
-            NewServerState = #serverstate{listeners=ServerState#serverstate.listeners,
-                messages=ServerState#serverstate.messages, 
-                channels=[#channel{name=ChannelName,pid=ChannelPid}|ServerState#serverstate.channels]},
-            {reply, ok, NewServerState}
+    {FromPid, _} = From,
+    case user_from_pid(FromPid, ServerState) of
+        not_found -> {reply, user_not_found, ServerState};
+        User -> case channel_from_name(ChannelName, ServerState) of
+            not_found -> {ok, ChannelPid} = channel:start_link(),
+                NewServerState = #serverstate{listeners=ServerState#serverstate.listeners,
+                    messages=ServerState#serverstate.messages, 
+                    channels=[#channel{name=ChannelName,pid=ChannelPid}|ServerState#serverstate.channels]},
+                {reply, channel:join(ChannelPid, User#user.username), NewServerState};
+            Channel -> {reply, channel:join(Channel#channel.pid, User#user.username), ServerState}
+        end
     end.
 
-handle_cast({send, FromPid, MessageText}, #serverstate{}=ServerState) ->
+handle_cast({send, FromPid, ChannelName, MessageText}, #serverstate{}=ServerState) ->
+    Channel = channel_from_name(ChannelName, ServerState),
+    channel:send(Channel#channel.pid, MessageText),
     {noreply, ServerState}.
 
 handle_info(Msg, ServerState) ->
@@ -93,4 +99,13 @@ remove_user({FromPid, _Ref}, ServerState) ->
     ServerState#serverstate{channels=ServerState#serverstate.channels, listeners=NewListeners}.
 
 user_from_pid(FromPid, ServerState) ->
-    hd(lists:filter(fun(User) -> User#user.pid == FromPid end, ServerState#serverstate.listeners)).
+    case lists:filter(fun(User) -> User#user.pid == FromPid end, ServerState#serverstate.listeners) of
+        [] -> not_found;
+        [X | _] -> X
+    end.
+
+channel_from_name(Name, ServerState) ->
+    case lists:filter(fun(Channel) -> Channel#channel.name == Name end, ServerState#serverstate.channels) of
+        [] -> not_found;
+        [X | _] -> X
+    end.
