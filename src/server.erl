@@ -59,14 +59,18 @@ handle_call({join, ChannelName}, From, #serverstate{}=ServerState) ->
                 NewServerState = #serverstate{listeners=ServerState#serverstate.listeners,
                     messages=ServerState#serverstate.messages, 
                     channels=[#channel{name=ChannelName,pid=ChannelPid}|ServerState#serverstate.channels]},
-                {reply, channel:join(ChannelPid, User#user.username), NewServerState};
-            Channel -> {reply, channel:join(Channel#channel.pid, User#user.username), ServerState}
+                {reply, channel:join(ChannelPid, User), NewServerState};
+            Channel -> {reply, channel:join(Channel#channel.pid, User), ServerState}
         end
     end.
 
 handle_cast({send, FromPid, ChannelName, MessageText}, #serverstate{}=ServerState) ->
     Channel = channel_from_name(ChannelName, ServerState),
-    channel:send(Channel#channel.pid, MessageText),
+    case Channel of
+        not_found -> io:format("Channel not found " ++ ChannelName);
+        _ -> channel:send(Channel#channel.pid, MessageText)
+
+    end,
     {noreply, ServerState}.
 
 handle_info(Msg, ServerState) ->

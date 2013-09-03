@@ -39,7 +39,7 @@ join_test_() ->
     {setup,
      fun() ->
         meck:new(channel),
-        meck:expect(channel, start_link, 0, {ok, self()}),
+        meck:expect(channel, start_link, 0, {ok, SelfPid}),
         meck:expect(channel, join, 2, ok),
         server:join(ServerPid, ChannelName)
      end,
@@ -48,7 +48,7 @@ join_test_() ->
      end,
      [?_assertEqual([ChannelName], server:channel_list(ServerPid)),
       ?_assert(meck:called(channel, start_link, [])),
-      ?_assert(meck:called(channel, join, [SelfPid, Username]))
+      ?_assert(meck:called(channel, join, [SelfPid, meck:is(fun(U) -> U#user.username == Username end)]))
      ]
 
     }.

@@ -41,6 +41,9 @@ send(Pid, MessageText) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 init(State) -> {ok, State}. %% no treatment of info here!
 
+handle_call({join, #user{}=User}, From, #state{}=State) ->
+    {Status, NewState} = add_user(User, From, State),
+    {reply, Status, NewState};
 handle_call({join, Username}, From, #state{}=State) ->
     {Status, NewState} = add_user(Username, From, State),
     broadcast_join_message(Username, NewState),
@@ -91,6 +94,11 @@ add_user(Username, {FromPid, _Ref}, State) ->
         true -> {duplicate_username, State};
         false -> NewUser = #user{username=Username, pid=FromPid},
                  {ok, State#state{listeners=[NewUser|State#state.listeners]}}
+    end;
+add_user(#user{}=User, {FromPid, _Ref}, State) ->
+    case lists:any(fun(X) -> X#user.username == User#user.username end, State#state.listeners) of
+        true -> {duplicate_username, State};
+        false -> {ok, State#state{listeners=[User|State#state.listeners]}}
     end.
 
 remove_user({FromPid, _Ref}, State) ->
