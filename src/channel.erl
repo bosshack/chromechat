@@ -90,16 +90,19 @@ list_usernames(State) ->
     lists:map(MapToUsername, State#state.listeners).
 
 add_user(Username, {FromPid, _Ref}, State) ->
-    case lists:any(fun(X) -> X#user.username == Username end, State#state.listeners) of
+    case has_user(Username, State) of
         true -> {duplicate_username, State};
         false -> NewUser = #user{username=Username, pid=FromPid},
                  {ok, State#state{listeners=[NewUser|State#state.listeners]}}
     end;
 add_user(#user{}=User, _From, State) ->
-    case lists:any(fun(X) -> X#user.username == User#user.username end, State#state.listeners) of
+    case has_user(User#user.username, State) of
         true -> {duplicate_username, State};
         false -> {ok, State#state{listeners=[User|State#state.listeners]}}
     end.
+
+has_user(Username, State) ->
+    lists:any(fun(X) -> X#user.username == Username end, State#state.listeners).
 
 remove_user({FromPid, _Ref}, State) ->
     OldListeners = State#state.listeners,
