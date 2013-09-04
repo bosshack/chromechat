@@ -49,7 +49,7 @@ handle_call({connect, Username}, From, #serverstate{}=ServerState) ->
 handle_call({disconnect}, From, #serverstate{}=ServerState) ->
     NewState = remove_user(From, ServerState),
     {reply, ok, NewState};
-handle_call({channel_list}, From, #serverstate{}=ServerState) ->
+handle_call({channel_list}, _From, #serverstate{}=ServerState) ->
     GetChannelName = fun(X) -> X#channel.name end,
     ChannelNames = lists:map(GetChannelName, ServerState#serverstate.channels),
     {reply, ChannelNames, ServerState};
