@@ -64,7 +64,7 @@ send_test_() ->
      fun() ->
         meck:new(channel),
         meck:expect(channel, join, 2, ok),
-        meck:expect(channel, send, 2, ok)
+        meck:expect(channel, send, 3, ok)
      end,
      fun(_) ->
         meck:unload(channel)
@@ -72,7 +72,7 @@ send_test_() ->
      [
       ?_assertMatch({noreply, ServerStateWithUserAndChannel},
             server:handle_cast({send, self(), ChannelName, MessageText}, ServerStateWithUserAndChannel)),
-      ?_assert(meck:called(channel, send, [Channel#channel.pid, MessageText]))
+      ?_assert(meck:called(channel, send, [Channel#channel.pid, self(), MessageText]))
      ]
 
     }.

@@ -73,7 +73,7 @@ handle_cast({send, FromPid, ChannelName, MessageText}, #serverstate{}=ServerStat
     Channel = channel_from_name(ChannelName, ServerState),
     case Channel of
         not_found -> io:format("Channel not found " ++ ChannelName);
-        _ -> channel:send(Channel#channel.pid, MessageText)
+        _ -> channel:send(Channel#channel.pid, FromPid, MessageText)
 
     end,
     {noreply, ServerState}.

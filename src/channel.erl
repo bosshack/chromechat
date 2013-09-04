@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %%% API
--export([start_link/0, join/2, nicklist/1, part/1, send/2]).
+-export([start_link/0, join/2, nicklist/1, part/1, send/2, send/3]).
 
 %%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
@@ -35,6 +35,9 @@ part(Pid) ->
 
 send(Pid, MessageText) ->
     gen_server:cast(Pid, {send, self(), MessageText}).
+
+send(Pid, FromPid, MessageText) ->
+    gen_server:cast(Pid, {send, FromPid, MessageText}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% gen_server callbacks %%%
