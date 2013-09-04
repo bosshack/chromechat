@@ -33,8 +33,8 @@ part_and_disappear_from_nicklist_test_() ->
 join_with_duplicate_username_test_() ->
     {ok, Pid} = channel:start_link(),
     Username = "knewter",
-    channel:join(Pid, Username),
-    SecondJoinResult = channel:join(Pid, Username),
+    channel:join(Pid, user(self())),
+    SecondJoinResult = channel:join(Pid, user(self())),
     [?_assertEqual(SecondJoinResult, duplicate_username),
      ?_assertEqual([Username], channel:nicklist(Pid))].
 
@@ -79,46 +79,46 @@ stop(_) ->
 %%%%%%%%%%%%%%%%%%%%
 can_connect(SelfPid) ->
     InitialState = #state{listeners=[], messages=[]},
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ok, StateWithUser}, channel:handle_call({join, "knewter"}, {SelfPid, []}, InitialState))].
+    [?_assertMatch({reply, ok, StateWithUser}, channel:handle_call({join, user(SelfPid)}, {SelfPid, []}, InitialState))].
 
 can_list_users(SelfPid) ->
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
     [?_assertMatch({reply, ["knewter"], StateWithUser}, channel:handle_call(nicklist, {SelfPid, []}, StateWithUser))].
 
 can_send_message(SelfPid) ->
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
     [?_assertMatch({noreply, StateWithUser}, channel:handle_cast({send, SelfPid, "some message" }, StateWithUser))].
 
-can_connect_and_then_see_self_in_nicklist(_) ->
+can_connect_and_then_see_self_in_nicklist(SelfPid) ->
     {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
+    channel:join(Pid, user(SelfPid)),
     [?_assertEqual(["knewter"], channel:nicklist(Pid))].
 
-can_disconnect_and_username_is_removed_from_nicklist(_) ->
+can_disconnect_and_username_is_removed_from_nicklist(SelfPid) ->
     {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
+    channel:join(Pid, user(SelfPid)),
     channel:part(Pid),
     [?_assertEqual([], channel:nicklist(Pid))].
 
-can_connect_and_send_message(_) ->
+can_connect_and_send_message(SelfPid) ->
     {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
+    channel:join(Pid, user(SelfPid)),
     flush(),
     channel:send(Pid, "this is a message"),
     assert_received(#message{username="knewter", text="this is a message"}).
 
-is_broadcast_on_join(_) ->
+is_broadcast_on_join(SelfPid) ->
     {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
+    channel:join(Pid, user(SelfPid)),
     assert_received(#message{username="system", text="knewter has joined."}).
 
-is_broadcast_on_part(_) ->
+is_broadcast_on_part(SelfPid) ->
     {ok, Pid} = channel:start_link(),
-    channel:join(Pid, "knewter"),
+    channel:join(Pid, user(SelfPid)),
     flush(),
     channel:part(Pid),
     assert_received(#message{username="system", text="knewter has parted."}).
@@ -140,5 +140,8 @@ flush() ->
     after 0 ->
         ok
     end.
+
+user(SelfPid) ->
+    #user{username="knewter",pid=SelfPid}.
 
 -endif.

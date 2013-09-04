@@ -2,7 +2,7 @@
 -behavior(gen_server).
 
 %%% API
--export([start_link/0, connect/2, join/2, disconnect/1, part/2, send/3, channel_list/1]).
+-export([start_link/0, connect/2, join/2, disconnect/1, part/2, send/3, channel_list/1, list_users/1]).
 
 %%% gen_server callbacks
 -export([init/1, handle_call/3, handle_info/2, handle_cast/2,
@@ -34,6 +34,9 @@ part(ServerPid, ChannelName) ->
 send(ServerPid, ChannelName, MessageText) ->
     gen_server:cast(ServerPid, {send, self(), ChannelName, MessageText}).
 
+list_users(ServerPid) ->
+    gen_server:call(ServerPid, {list_users}).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% gen_server callbacks %%%
@@ -62,7 +65,9 @@ handle_call({join, ChannelName}, From, #serverstate{}=ServerState) ->
                 {reply, channel:join(ChannelPid, User), NewServerState};
             Channel -> {reply, channel:join(Channel#channel.pid, User), ServerState}
         end
-    end.
+    end;
+handle_call({list_users}, _From, #serverstate{}=ServerState) ->
+    {reply, ServerState#serverstate.listeners, ServerState}.
 
 handle_cast({send, FromPid, ChannelName, MessageText}, #serverstate{}=ServerState) ->
     Channel = channel_from_name(ChannelName, ServerState),

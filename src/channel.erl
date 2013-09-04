@@ -24,8 +24,8 @@
 start_link() ->
     gen_server:start_link(?MODULE, #state{}, []).
 
-join(Pid, Username) ->
-    gen_server:call(Pid, {join, Username}).
+join(Pid, User) ->
+    gen_server:call(Pid, {join, User}).
 
 nicklist(Pid) ->
     gen_server:call(Pid, nicklist).
@@ -41,12 +41,9 @@ send(Pid, MessageText) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 init(State) -> {ok, State}. %% no treatment of info here!
 
-handle_call({join, #user{}=User}, From, #state{}=State) ->
+handle_call({join, User}, From, #state{}=State) ->
     {Status, NewState} = add_user(User, From, State),
-    {reply, Status, NewState};
-handle_call({join, Username}, From, #state{}=State) ->
-    {Status, NewState} = add_user(Username, From, State),
-    broadcast_join_message(Username, NewState),
+    broadcast_join_message(User#user.username, NewState),
     {reply, Status, NewState};
 handle_call(nicklist, _From, #state{}=State) ->
     {reply, list_usernames(State), State};
@@ -89,16 +86,11 @@ list_usernames(State) ->
     end,
     lists:map(MapToUsername, State#state.listeners).
 
-add_user(Username, {FromPid, _Ref}, State) ->
-    case has_user(Username, State) of
-        true -> {duplicate_username, State};
-        false -> NewUser = #user{username=Username, pid=FromPid},
-                 {ok, State#state{listeners=[NewUser|State#state.listeners]}}
-    end;
 add_user(#user{}=User, _From, State) ->
     case has_user(User#user.username, State) of
         true -> {duplicate_username, State};
-        false -> {ok, State#state{listeners=[User|State#state.listeners]}}
+        false -> 
+            {ok, State#state{listeners=[User|State#state.listeners]}}
     end.
 
 has_user(Username, State) ->
@@ -115,6 +107,7 @@ broadcast(MessageText, FromPid, State) ->
 broadcast(Message, #state{}=State) ->
     lists:foreach(fun(L) -> broadcast(Message, L#user.pid) end, State#state.listeners);
 broadcast(Message, ToPid) ->
+    io:format("Sending message to ~p~n", [ToPid]),
     ToPid ! Message.
 
 build_message(MessageText, FromPid, State) ->
