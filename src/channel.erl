@@ -95,7 +95,7 @@ add_user(Username, {FromPid, _Ref}, State) ->
         false -> NewUser = #user{username=Username, pid=FromPid},
                  {ok, State#state{listeners=[NewUser|State#state.listeners]}}
     end;
-add_user(#user{}=User, {FromPid, _Ref}, State) ->
+add_user(#user{}=User, _From, State) ->
     case lists:any(fun(X) -> X#user.username == User#user.username end, State#state.listeners) of
         true -> {duplicate_username, State};
         false -> {ok, State#state{listeners=[User|State#state.listeners]}}
