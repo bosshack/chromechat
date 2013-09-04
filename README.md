@@ -8,7 +8,7 @@ A chat server written in erlang.  It consists of the following components:
         - { connect, { ServerPid, username } }
             - This will reject a connection if your username is already taken.
             - otherwise, the user is added to the 'list of connected users' in some fashion.
-        - { quit, { ServerPid } }
+        - { disconnect, { ServerPid } }
         - { join, { ServerPid, channelname } }
             - Only allows a user to join the same channel once.
             - If you're the first user to join this channel, create the corresponding channel.
