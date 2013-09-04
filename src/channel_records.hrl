@@ -1,3 +1,5 @@
+-record(serverstate, { channels=[], listeners=[], messages=[] }).
+-record(channel, { pid, name }).
 -record(state, { listeners=[], messages=[] }).
 -record(user, { username, pid }).
 -record(message, { username, text }).

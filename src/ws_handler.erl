@@ -7,7 +7,7 @@
 -export([websocket_info/3]).
 -export([websocket_terminate/3]).
 
--include_lib("chatserver_records.hrl").
+-include_lib("channel_records.hrl").
 
 init({tcp, http}, _Req, _Opts) ->
     {upgrade, protocol, cowboy_websocket}.
@@ -15,12 +15,12 @@ init({tcp, http}, _Req, _Opts) ->
 websocket_init(_TransportName, Req, _Opts) ->
     %% Connect to our chat server on behalf of this connected user...
     %% FIXME: This needs to be something you can set - ideally with a message to the chatserver (/nick)
-    chatserver:join(chatserver_server, "knewter"),
+    channel:join(channel_server, "knewter"),
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
-    chatserver:send(chatserver_server, Msg),
-    {reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
+    channel:send(channel_server, Msg),
+    {ok, Req, State};
 websocket_handle(_Data, Req, State) ->
     {ok, Req, State}.
 

@@ -1,11 +1,11 @@
 %% This is my first attempt at unit testing a server in erlang.
 %% Was pointed to this as an example: https://github.com/blt/locker/blob/master/src/lk_proc.erl#L144
--module(chatserver_test).
+-module(channel_test).
 
 -ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
--include("../../src/chatserver_records.hrl").
+-include("../../src/channel_records.hrl").
 
 -define(setup(F), {setup, fun start/0, fun stop/1, F}).
 -define(TIMEOUT, 50).
@@ -30,13 +30,13 @@ part_and_disappear_from_nicklist_test_() ->
     {"A client that disconnects no longer shows up in the nicklist.",
      ?setup(fun can_disconnect_and_username_is_removed_from_nicklist/1)}.
 
-join_with_duplicate_username_return_test_() ->
-    {"A client joins with a nick that already is in use and gets duplicate_username return.",
-     ?setup(fun join_with_duplicate_username_returns_duplicate_username/1)}.
-
-join_with_duplicate_username_does_not_appear_in_nicklist_test_() ->
-    {"A client joins with a nick that already is in use and gets duplicate_username return.",
-     ?setup(fun join_with_duplicate_username_does_not_appear_in_nicklist/1)}.        
+join_with_duplicate_username_test_() ->
+    {ok, Pid} = channel:start_link(),
+    Username = "knewter",
+    channel:join(Pid, user(self())),
+    SecondJoinResult = channel:join(Pid, user(self())),
+    [?_assertEqual(SecondJoinResult, duplicate_username),
+     ?_assertEqual([Username], channel:nicklist(Pid))].
 
 connect_and_send_message_test_() ->
     {"A client connects and sends a message, and has that message broadcast to it.",
@@ -79,61 +79,48 @@ stop(_) ->
 %%%%%%%%%%%%%%%%%%%%
 can_connect(SelfPid) ->
     InitialState = #state{listeners=[], messages=[]},
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ok, StateWithUser}, chatserver:handle_call({join, "knewter"}, {SelfPid, []}, InitialState))].
+    [?_assertMatch({reply, ok, StateWithUser}, channel:handle_call({join, user(SelfPid)}, {SelfPid, []}, InitialState))].
 
 can_list_users(SelfPid) ->
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({reply, ["knewter"], StateWithUser}, chatserver:handle_call(nicklist, {SelfPid, []}, StateWithUser))].
+    [?_assertMatch({reply, ["knewter"], StateWithUser}, channel:handle_call(nicklist, {SelfPid, []}, StateWithUser))].
 
 can_send_message(SelfPid) ->
-    Knewter = #user{username="knewter", pid=SelfPid},
+    Knewter = user(SelfPid),
     StateWithUser = #state{listeners=[Knewter], messages=[]},
-    [?_assertMatch({noreply, StateWithUser}, chatserver:handle_cast({send, SelfPid, "some message" }, StateWithUser))].
+    [?_assertMatch({noreply, StateWithUser}, channel:handle_cast({send, SelfPid, "some message" }, StateWithUser))].
 
-can_connect_and_then_see_self_in_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    [?_assertEqual(["knewter"], chatserver:nicklist(Pid))].
+can_connect_and_then_see_self_in_nicklist(SelfPid) ->
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, user(SelfPid)),
+    [?_assertEqual(["knewter"], channel:nicklist(Pid))].
 
-can_disconnect_and_username_is_removed_from_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    chatserver:part(Pid),
-    [?_assertEqual([], chatserver:nicklist(Pid))].
+can_disconnect_and_username_is_removed_from_nicklist(SelfPid) ->
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, user(SelfPid)),
+    channel:part(Pid),
+    [?_assertEqual([], channel:nicklist(Pid))].
 
-join_with_duplicate_username_returns_duplicate_username(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
-    SecondJoinResult = chatserver:join(Pid, "knewter"),
-    [?_assertEqual(SecondJoinResult, duplicate_username)].
-
-join_with_duplicate_username_does_not_appear_in_nicklist(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    Username = "knewter",
-    chatserver:join(Pid, Username),
-    chatserver:join(Pid, Username),
-    [?_assertEqual([Username], chatserver:nicklist(Pid))].        
-
-can_connect_and_send_message(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+can_connect_and_send_message(SelfPid) ->
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, user(SelfPid)),
     flush(),
-    chatserver:send(Pid, "this is a message"),
+    channel:send(Pid, "this is a message"),
     assert_received(#message{username="knewter", text="this is a message"}).
 
-is_broadcast_on_join(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+is_broadcast_on_join(SelfPid) ->
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, user(SelfPid)),
     assert_received(#message{username="system", text="knewter has joined."}).
 
-is_broadcast_on_part(_) ->
-    {ok, Pid} = chatserver:start_link(),
-    chatserver:join(Pid, "knewter"),
+is_broadcast_on_part(SelfPid) ->
+    {ok, Pid} = channel:start_link(),
+    channel:join(Pid, user(SelfPid)),
     flush(),
-    chatserver:part(Pid),
+    channel:part(Pid),
     assert_received(#message{username="system", text="knewter has parted."}).
 
 assert_received(Inbound) ->
@@ -153,5 +140,8 @@ flush() ->
     after 0 ->
         ok
     end.
+
+user(SelfPid) ->
+    #user{username="knewter",pid=SelfPid}.
 
 -endif.
