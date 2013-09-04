@@ -9,6 +9,9 @@ A chat server written in erlang.  It consists of the following components:
             - This will reject a connection if your username is already taken.
             - otherwise, the user is added to the 'list of connected users' in some fashion.
         - { disconnect, { ServerPid } }
+        - { channel_list, { ServerPid } }
+        - { send, { ServerPid, ChannelName, MessageText } }
+            - Will not let you send to a channel that you have not joined.
         - { join, { ServerPid, channelname } }
             - Only allows a user to join the same channel once.
             - If you're the first user to join this channel, create the corresponding channel.
@@ -73,7 +76,7 @@ channel:join(Pid, "knewter").
 channel:send(Pid, "Message test").
 ```
 
-### Trying out communication between two processes via the channel
+### Trying out communication between two processes via the server
 
 This is a fun little thing using erlang's distribution.  Try the following:
 
@@ -122,20 +125,25 @@ And read the message from bar:
 flush(). % You should see the message was received
 ```
 
-Good, they're talking to each other.  Now, let's run a channel in foo, then connect to it as one user in foo, and connect to it as another user in bar.  Finally, let's have a user send a message to the chat server, and verify the other user had the message broadcast to them.
+Good, they're talking to each other.  Now, let's run a server in foo, then connect to it as one user in foo, and connect to it as another user in bar. We'll have both join the `boss` channel. Finally, let's have a user send a message to the chat server, and verify the other user had the message broadcast to them.
 
 ```erlang
 % in foo
+c(server).
+rr(server).
 c(channel).
 rr(channel).
-{ok, Pid} = channel:start_link().
-channel:join(Pid, "foo_user").
+{ok, ServerPid} = server:start_link().
+server:connect(ServerPid, "foo_user").
+server:join(ServerPid, "boss"). % Join the boss channel
 ```
 
 Then join from bar:
 
 ```erlang
 % in bar
+c(server).
+rr(server).
 c(channel).
 rr(channel).
 % uh oh, we need the pid...let's prepare to receive it:
@@ -162,16 +170,15 @@ Now that bar knows the Pid to talk to the channel, let's have him join:
 
 ```erlang
 % in bar
-channel:join(ServerPid, "bar_user").
-% Now list the users
-channel:nicklist(ServerPid). % Should see two - ["foo_user", "bar_user"]
+server:connect(ServerPid, "bar_user").
+server:join(ServerPid, "boss").
 ```
 
 That's it, we have two distinct erlang VMs talking to the channel now.  Let's finish up by sending a message via the chat server:
 
 ```erlang
 % in foo
-channel:send(Pid, "Hey guys!").
+server:send(ServerPid, "boss", "Hey guys!").
 flush(). % Since we're connecting, we should have had our own message broadcast back to us.
 ```
 
