@@ -92,7 +92,7 @@ list_usernames(State) ->
 add_user(#user{}=User, _From, State) ->
     case has_user(User#user.username, State) of
         true -> {duplicate_username, State};
-        false -> 
+        false ->
             {ok, State#state{listeners=[User|State#state.listeners]}}
     end.
 

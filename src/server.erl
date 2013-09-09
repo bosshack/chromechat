@@ -60,7 +60,7 @@ handle_call({join, ChannelName}, From, #serverstate{}=ServerState) ->
         User -> case channel_from_name(ChannelName, ServerState) of
             not_found -> {ok, ChannelPid} = channel:start_link(),
                 NewServerState = #serverstate{listeners=ServerState#serverstate.listeners,
-                    messages=ServerState#serverstate.messages, 
+                    messages=ServerState#serverstate.messages,
                     channels=[#channel{name=ChannelName,pid=ChannelPid}|ServerState#serverstate.channels]},
                 {reply, channel:join(ChannelPid, User), NewServerState};
             Channel -> {reply, channel:join(Channel#channel.pid, User), ServerState}

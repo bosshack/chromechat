@@ -15,11 +15,12 @@ init({tcp, http}, _Req, _Opts) ->
 websocket_init(_TransportName, Req, _Opts) ->
     %% Connect to our chat server on behalf of this connected user...
     %% FIXME: This needs to be something you can set - ideally with a message to the chatserver (/nick)
-    channel:join(channel_server, "knewter"),
+    server:connect(chatserver, "knewter"),
+    server:join(chatserver, "boss"),
     {ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->
-    channel:send(channel_server, Msg),
+    server:send(chatserver, "boss", Msg),
     {ok, Req, State};
 websocket_handle(_Data, Req, State) ->
     {ok, Req, State}.
