@@ -54,9 +54,12 @@ Then, run it.
 
 Now you can go to http://localhost:8080
 
-NOTE: Presently the server hosts a channel, rather than a chatserver, due to an
-inadequate original design.  We're working on building out the actual chatserver
-component at present :)
+To run a console with access to all the dependencies:
+
+```
+rebar compile
+erl -pa $PWD/ebin $PWD/deps/*/ebin
+```
 
 ## Basic in-console tests
 
