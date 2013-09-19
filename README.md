@@ -49,10 +49,20 @@ make
 Then, run it.
 
 ```
-./start.sh
+bin/chromechat start
 ```
 
-Now you can go to http://localhost:8080
+Now you can go to http://localhost:8000
+
+To run the server as a daemonized process:
+```
+bin/chromechat start -detached
+```
+
+To stop the server:
+```
+bin/chromechat stop
+```
 
 NOTE: Presently the server hosts a channel, rather than a chatserver, due to an
 inadequate original design.  We're working on building out the actual chatserver
