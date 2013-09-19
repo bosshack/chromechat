@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -o errexit
+
+PA="$PWD/ebin $PWD/deps/*/ebin"
+HOSTNAME=`hostname -s`
+
+case $1 in
+  stop)
+    shift
+    exec erl \
+      -noshell \
+      -sname chromechat_ctl@$HOSTNAME \
+      -pa $PA \
+      -eval "rpc:call(chromechat@$HOSTNAME, init, stop, [])" \
+      -s init stop \
+      "$@"
+    ;;
+
+  start)
+    shift
+    exec erl \
+      -heart \
+      -sname chromechat@$HOSTNAME \
+      -pa $PA \
+      -boot start_sasl \
+      -s chromechat \
+      "$@"
+    ;;
+esac
+
