@@ -16,7 +16,7 @@ A chat server written in erlang.  It consists of the following components:
             - Only allows a user to join the same channel once.
             - If you're the first user to join this channel, create the corresponding channel.
             - Proxy the join message on behalf of the sender to this channel (which is its own running OTP server)
-         - { part, { ServerPid, channelname } }
+        - { part, { ServerPid, channelname } }
             - Removes the user from the channel with that name.
             - If not in the channel or no channel by that name, 'succeed.'
 - channel
