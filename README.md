@@ -49,10 +49,20 @@ make
 Then, run it.
 
 ```
-./start.sh
+bin/chromechat start
 ```
 
-Now you can go to http://localhost:8080
+Now you can go to http://localhost:8000
+
+To run the server as a daemonized process:
+```
+bin/chromechat start -detached
+```
+
+To stop the server:
+```
+bin/chromechat stop
+```
 
 To run a console with access to all the dependencies:
 
@@ -71,11 +81,12 @@ Just a few notes on how you can use this as I get it built, since I'm new to erl
 c(channel, [debug_info]).
 rr(channel).
 {ok, Pid} = channel:start_link().
-channel:join(Pid, "knewter").
+User = #user{username="knewter", pid=self()}.
+channel:join(Pid, User).
 channel:nicklist(Pid).
 channel:part(Pid).
 channel:nicklist(Pid).
-channel:join(Pid, "knewter").
+channel:join(Pid, User).
 channel:send(Pid, "Message test").
 ```
 
