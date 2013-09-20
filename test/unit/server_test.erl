@@ -50,7 +50,6 @@ join_test_() ->
       ?_assert(meck:called(channel, start_link, [])),
       ?_assert(meck:called(channel, join, [SelfPid, meck:is(fun(U) -> U#user.username == Username end)]))
      ]
-
     }.
 
 send_test_() ->
